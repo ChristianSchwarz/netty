@@ -18,6 +18,7 @@ package io.netty.channel.uart;
 import static io.netty.channel.uart.UartChannelOption.BAUD_RATE;
 import static io.netty.channel.uart.UartChannelOption.DATA_BITS;
 import static io.netty.channel.uart.UartChannelOption.DTR;
+import static io.netty.channel.uart.UartChannelOption.FLOW_CONTROL;
 import static io.netty.channel.uart.UartChannelOption.PARITY;
 import static io.netty.channel.uart.UartChannelOption.RTS;
 import static io.netty.channel.uart.UartChannelOption.STOP_BITS;
@@ -41,6 +42,7 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
     private volatile Stopbits stopbits = Stopbits.STOPBITS_1;
     private volatile Databits databits = Databits.DATABITS_8;
     private volatile Parity paritybit = Parity.PARITY_NONE;
+	private volatile FlowControl flowControl = FlowControl.XXX;
 
 
     public DefaultUartChannelConfig(UartChannel channel) {
@@ -49,7 +51,7 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
 
     @Override
     public Map<ChannelOption<?>, Object> getOptions() {
-        return getOptions(super.getOptions(), BAUD_RATE, DTR, RTS, STOP_BITS, DATA_BITS, PARITY, WAIT_TIME);
+        return getOptions(super.getOptions(), BAUD_RATE, DTR, RTS, STOP_BITS, DATA_BITS, PARITY, FLOW_CONTROL,WAIT_TIME);
     }
 
     @SuppressWarnings("unchecked")
@@ -73,6 +75,8 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
         if (option == PARITY) {
             return (T) getParitybit();
         }
+        if (option == FLOW_CONTROL)
+        	return (T) getFlowControl();
         return super.getOption(option);
     }
 
@@ -92,19 +96,20 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
             setDatabits((Databits) value);
         } else if (option == PARITY) {
             setParitybit((Parity) value);
-        } else {
+        } else if (option == FLOW_CONTROL)
+        	setFlowControl((FlowControl) value);
+        else {
             return super.setOption(option, value);
         }
         return true;
     }
 
     @Override
-    public UartChannelConfig setBaudrate(final int baudrate) {
-        this.baudrate = baudrate;
-        return this;
-    }
+	public Stopbits getStopbits() {
+	    return stopbits;
+	}
 
-    @Override
+	@Override
     public UartChannelConfig setStopbits(final Stopbits stopbits) {
         this.stopbits = stopbits;
         return this;
@@ -128,19 +133,31 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
     }
 
     @Override
-    public Stopbits getStopbits() {
-        return stopbits;
-    }
-
-    @Override
     public Databits getDatabits() {
         return databits;
     }
 
     @Override
+	public UartChannelConfig setBaudrate(final int baudrate) {
+	    this.baudrate = baudrate;
+	    return this;
+	}
+
+	@Override
     public Parity getParitybit() {
         return paritybit;
     }
+    
+    @Override
+	public FlowControl getFlowControl() {
+		return flowControl;
+	}
+
+	@Override
+	public UartChannelConfig setFlowControl(FlowControl flowControl) {
+		this.flowControl=flowControl;
+		return this;
+	}
 
     @Override
     public boolean isDtr() {
@@ -220,4 +237,6 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
         super.setMessageSizeEstimator(estimator);
         return this;
     }
+
+	
 }

@@ -17,6 +17,7 @@ package io.netty.channel.uart;
 
 import io.netty.channel.ChannelOption;
 import io.netty.channel.uart.UartChannelConfig.Databits;
+import io.netty.channel.uart.UartChannelConfig.FlowControl;
 import io.netty.channel.uart.UartChannelConfig.Parity;
 import io.netty.channel.uart.UartChannelConfig.Stopbits;
 import static io.netty.channel.ChannelOption.*;
@@ -36,6 +37,7 @@ public final class UartChannelOption {
     public static final ChannelOption<Parity> PARITY = valueOf(T, "PARITY_BIT");
     public static final ChannelOption<Integer> WAIT_TIME = valueOf(T, "WAIT_TIME");
     public static final ChannelOption<Integer> READ_TIMEOUT = valueOf(T, "READ_TIMEOUT");
+    public static final ChannelOption<FlowControl> FLOW_CONTROL = valueOf(T, "FLOW_CONTROL");
 
     private UartChannelOption() { }
 }
