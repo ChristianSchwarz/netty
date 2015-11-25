@@ -13,41 +13,49 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.channel.rxtx;
+package io.netty.channel.uart.rxtx;
 
+import static io.netty.channel.uart.UartChannelOption.*;
+import static io.netty.channel.uart.UartDeviceAddress.LOCAL_ADDRESS;
+import static io.netty.channel.uart.rxtx.ChannelConfigConverter.toRxtx;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.oio.OioByteStreamChannel;
-import io.netty.util.internal.OneTimeTask;
+import io.netty.channel.uart.UartChannel;
+import io.netty.channel.uart.UartChannelConfig;
+import io.netty.channel.uart.DefaultUartChannelConfig;
+import io.netty.channel.uart.UartChannelConfig.Databits;
+import io.netty.channel.uart.UartChannelConfig.Parity;
+import io.netty.channel.uart.UartChannelConfig.Stopbits;
+import io.netty.channel.uart.UartChannelOption;
+import io.netty.channel.uart.UartDeviceAddress;
 
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
-import static io.netty.channel.rxtx.RxtxChannelOption.*;
-
 /**
  * A channel to a serial device using the RXTX library.
  */
-public class RxtxChannel extends OioByteStreamChannel {
+public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
 
-    private static final RxtxDeviceAddress LOCAL_ADDRESS = new RxtxDeviceAddress("localhost");
+    
 
-    private final RxtxChannelConfig config;
+    private final UartChannelConfig config;
 
     private boolean open = true;
-    private RxtxDeviceAddress deviceAddress;
+    private UartDeviceAddress deviceAddress;
     private SerialPort serialPort;
 
     public RxtxChannel() {
         super(null);
 
-        config = new DefaultRxtxChannelConfig(this);
+        config = new DefaultUartChannelConfig(this);
     }
 
     @Override
-    public RxtxChannelConfig config() {
+    public UartChannelConfig config() {
         return config;
     }
 
@@ -63,21 +71,26 @@ public class RxtxChannel extends OioByteStreamChannel {
 
     @Override
     protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
-        RxtxDeviceAddress remote = (RxtxDeviceAddress) remoteAddress;
-        final CommPortIdentifier cpi = CommPortIdentifier.getPortIdentifier(remote.value());
+    	UartDeviceAddress remote = (UartDeviceAddress) remoteAddress;
+        final CommPortIdentifier cpi = CommPortIdentifier.getPortIdentifier(remote.getPortName());
         final CommPort commPort = cpi.open(getClass().getName(), 1000);
-        commPort.enableReceiveTimeout(config().getOption(READ_TIMEOUT));
+       //commPort.enableReceiveTimeout(config().getOption(READ_TIMEOUT));
         deviceAddress = remote;
 
         serialPort = (SerialPort) commPort;
     }
 
     protected void doInit() throws Exception {
-        serialPort.setSerialPortParams(
-            config().getOption(BAUD_RATE),
-            config().getOption(DATA_BITS).value(),
-            config().getOption(STOP_BITS).value(),
-            config().getOption(PARITY_BIT).value()
+        Integer bauds = config().getOption(BAUD_RATE);
+		Databits databits = config().getOption(DATA_BITS);
+		Stopbits stopbits = config().getOption(STOP_BITS);
+		Parity partiy = config().getOption(PARITY);
+		
+		serialPort.setSerialPortParams(
+            bauds,
+            toRxtx(databits),
+            toRxtx(stopbits),
+            toRxtx(partiy)
         );
         serialPort.setDTR(config().getOption(DTR));
         serialPort.setRTS(config().getOption(RTS));
@@ -86,22 +99,22 @@ public class RxtxChannel extends OioByteStreamChannel {
     }
 
     @Override
-    public RxtxDeviceAddress localAddress() {
-        return (RxtxDeviceAddress) super.localAddress();
+    public UartDeviceAddress localAddress() {
+        return (UartDeviceAddress) super.localAddress();
     }
 
     @Override
-    public RxtxDeviceAddress remoteAddress() {
-        return (RxtxDeviceAddress) super.remoteAddress();
+    public UartDeviceAddress remoteAddress() {
+        return (UartDeviceAddress) super.remoteAddress();
     }
 
     @Override
-    protected RxtxDeviceAddress localAddress0() {
+    protected UartDeviceAddress localAddress0() {
         return LOCAL_ADDRESS;
     }
 
     @Override
-    protected RxtxDeviceAddress remoteAddress0() {
+    protected UartDeviceAddress remoteAddress0() {
         return deviceAddress;
     }
 
@@ -144,7 +157,7 @@ public class RxtxChannel extends OioByteStreamChannel {
 
                 int waitTime = config().getOption(WAIT_TIME);
                 if (waitTime > 0) {
-                    eventLoop().schedule(new OneTimeTask() {
+                    eventLoop().schedule(new Runnable() {
                         @Override
                         public void run() {
                             try {

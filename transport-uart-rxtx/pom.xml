@@ -23,7 +23,7 @@
     <version>5.0.0.Alpha3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>netty-transport-rxtx</artifactId>
+  <artifactId>netty-transport-uart-rxtx</artifactId>
   <packaging>jar</packaging>
 
   <name>Netty/Transport/RXTX</name>
@@ -37,6 +37,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>netty-transport</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>netty-transport-uart</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- FIXME find/make osgi bundle -->
