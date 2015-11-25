@@ -110,7 +110,16 @@ public interface UartChannelConfig extends ChannelConfig {
          */
         SPACE;
     }
+    
+    enum FlowControl{
+    	XXX
+    }
     /**
+	 * @return The configured baud rate, defaulting to 115200 if unset
+	 */
+	int getBaudrate();
+
+	/**
      * Sets the baud rate (ie. bits per second) for communication with the serial device.
      * The baud rate will include bits for framing (in the form of stop bits and parity),
      * such that the effective data rate will be lower than this value.
@@ -120,6 +129,11 @@ public interface UartChannelConfig extends ChannelConfig {
     UartChannelConfig setBaudrate(int baudrate);
 
     /**
+	 * @return The configured stop bits, defaulting to {@link Stopbits#STOPBITS_1} if unset
+	 */
+	Stopbits getStopbits();
+
+	/**
      * Sets the number of stop bits to include at the end of every character to aid the
      * serial device in synchronising with the data.
      *
@@ -136,22 +150,18 @@ public interface UartChannelConfig extends ChannelConfig {
     UartChannelConfig setDatabits(Databits databits);
 
     /**
-     * Sets the type of parity bit to be used when communicating with the serial device.
-     *
-     * @param paritybit The type of parity bit to be used
+     * TODO
+     * @return
      */
-    UartChannelConfig setParitybit(Parity paritybit);
-
+    FlowControl getFlowControl();
+    
     /**
-     * @return The configured baud rate, defaulting to 115200 if unset
+     * TODO
+     * @param flowControl
+     * @return
      */
-    int getBaudrate();
-
-    /**
-     * @return The configured stop bits, defaulting to {@link Stopbits#STOPBITS_1} if unset
-     */
-    Stopbits getStopbits();
-
+    UartChannelConfig setFlowControl(FlowControl flowControl);
+    
     /**
      * @return The configured data bits, defaulting to {@link Databits#DATABITS_8} if unset
      */
@@ -163,6 +173,13 @@ public interface UartChannelConfig extends ChannelConfig {
     Parity getParitybit();
 
     /**
+	 * Sets the type of parity bit to be used when communicating with the serial device.
+	 *
+	 * @param paritybit The type of parity bit to be used
+	 */
+	UartChannelConfig setParitybit(Parity paritybit);
+
+	/**
      * @return true if the serial device should support the Data Terminal Ready signal
      */
     boolean isDtr();

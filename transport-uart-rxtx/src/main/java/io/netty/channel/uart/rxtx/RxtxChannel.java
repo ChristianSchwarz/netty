@@ -15,7 +15,9 @@
  */
 package io.netty.channel.uart.rxtx;
 
-import static io.netty.channel.uart.UartChannelOption.*;
+import static io.netty.channel.uart.UartChannelOption.DTR;
+import static io.netty.channel.uart.UartChannelOption.RTS;
+import static io.netty.channel.uart.UartChannelOption.WAIT_TIME;
 import static io.netty.channel.uart.UartDeviceAddress.LOCAL_ADDRESS;
 import static io.netty.channel.uart.rxtx.ChannelConfigConverter.toRxtx;
 import gnu.io.CommPort;
@@ -23,14 +25,15 @@ import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.oio.OioByteStreamChannel;
+import io.netty.channel.uart.DefaultUartChannelConfig;
 import io.netty.channel.uart.UartChannel;
 import io.netty.channel.uart.UartChannelConfig;
-import io.netty.channel.uart.DefaultUartChannelConfig;
 import io.netty.channel.uart.UartChannelConfig.Databits;
+import io.netty.channel.uart.UartChannelConfig.FlowControl;
 import io.netty.channel.uart.UartChannelConfig.Parity;
 import io.netty.channel.uart.UartChannelConfig.Stopbits;
-import io.netty.channel.uart.UartChannelOption;
 import io.netty.channel.uart.UartDeviceAddress;
+import io.netty.util.internal.OneTimeTask;
 
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
@@ -81,17 +84,18 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
     }
 
     protected void doInit() throws Exception {
-        Integer bauds = config().getOption(BAUD_RATE);
-		Databits databits = config().getOption(DATA_BITS);
-		Stopbits stopbits = config().getOption(STOP_BITS);
-		Parity partiy = config().getOption(PARITY);
-		
+        int bauds = config().getBaudrate();
+		Databits databits = config().getDatabits();
+		Stopbits stopbits = config().getStopbits();
+		Parity partiy = config().getParitybit();
+		FlowControl flowControl = config().getFlowControl();
 		serialPort.setSerialPortParams(
             bauds,
             toRxtx(databits),
             toRxtx(stopbits),
             toRxtx(partiy)
         );
+		serialPort.setFlowControlMode(toRxtx(flowControl));
         serialPort.setDTR(config().getOption(DTR));
         serialPort.setRTS(config().getOption(RTS));
 
@@ -157,7 +161,7 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
 
                 int waitTime = config().getOption(WAIT_TIME);
                 if (waitTime > 0) {
-                    eventLoop().schedule(new Runnable() {
+                    eventLoop().schedule(new OneTimeTask() {
                         @Override
                         public void run() {
                             try {
