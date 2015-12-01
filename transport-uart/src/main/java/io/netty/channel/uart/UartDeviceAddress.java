@@ -25,22 +25,28 @@ public class UartDeviceAddress extends SocketAddress {
 
     private static final long serialVersionUID = -2907820090993709523L;
 
-    private final String value;
+    private final String portName;
 
-    public final static UartDeviceAddress LOCAL_ADDRESS = new UartDeviceAddress( null);
+    public final static UartDeviceAddress LOCAL_ADDRESS = new UartDeviceAddress();
+    
+    private UartDeviceAddress(){
+    	portName=null;
+    }
     /**
      * Creates a {@link UartDeviceAddress} representing the address of the serial port.
      *
      * @param portName the address of the device (e.g. "COM1", "/dev/ttyUSB0", ...)
      */
     public UartDeviceAddress(String portName) {
-        this.value = portName;
+    	if (portName==null)
+    		throw new IllegalArgumentException("Argument >portName< must not be null!");
+        this.portName = portName;
     }
 
     /**
      * @return The serial port address of the device (e.g. COM1, /dev/ttyUSB0, ...)
      */
     public String getPortName() {
-        return value;
+        return portName;
     }
 }
