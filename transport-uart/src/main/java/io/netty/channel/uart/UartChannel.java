@@ -23,14 +23,24 @@ import io.netty.channel.Channel;
 public interface UartChannel extends Channel {
 
     @Override
-    public UartChannelConfig config();
+    UartChannelConfig config();
 
-    
-    @Override
-    public UartDeviceAddress localAddress() ;
 
+    /**
+     * Returns  always {@link UartDeviceAddress#LOCAL_ADDRESS} to indicate that UART-Ports have no local address.
+     *
+     * @return always {@link UartDeviceAddress#LOCAL_ADDRESS}
+     */
     @Override
-    public UartDeviceAddress remoteAddress();
+    UartDeviceAddress localAddress();
+
+    /**
+     * The UART-Address this channel is bound to, e.g. "COM1" on Windows or "dev/ttyS0" on Unix-System
+     *
+     * @return never {@code null}
+     */
+    @Override
+    UartDeviceAddress remoteAddress();
 
     
 

@@ -15,14 +15,6 @@
  */
 package io.netty.channel.uart;
 
-import static io.netty.channel.uart.UartChannelOption.BAUD_RATE;
-import static io.netty.channel.uart.UartChannelOption.DATA_BITS;
-import static io.netty.channel.uart.UartChannelOption.DTR;
-import static io.netty.channel.uart.UartChannelOption.FLOW_CONTROL;
-import static io.netty.channel.uart.UartChannelOption.PARITY;
-import static io.netty.channel.uart.UartChannelOption.RTS;
-import static io.netty.channel.uart.UartChannelOption.STOP_BITS;
-import static io.netty.channel.uart.UartChannelOption.WAIT_TIME;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.DefaultChannelConfig;
@@ -30,6 +22,8 @@ import io.netty.channel.MessageSizeEstimator;
 import io.netty.channel.RecvByteBufAllocator;
 
 import java.util.Map;
+
+import static io.netty.channel.uart.UartChannelOption.*;
 
 /**
  * Default configuration UART device connections.
@@ -42,7 +36,7 @@ public final class DefaultUartChannelConfig extends DefaultChannelConfig impleme
     private volatile Stopbits stopbits = Stopbits.STOPBITS_1;
     private volatile Databits databits = Databits.DATABITS_8;
     private volatile Parity paritybit = Parity.PARITY_NONE;
-	private volatile FlowControl flowControl = FlowControl.XXX;
+    private volatile FlowControl flowControl = FlowControl.FLOWCONTROL_NONE;
 
 
     public DefaultUartChannelConfig(UartChannel channel) {

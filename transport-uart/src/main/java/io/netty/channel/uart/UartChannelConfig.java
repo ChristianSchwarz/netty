@@ -43,8 +43,6 @@ import io.netty.channel.RecvByteBufAllocator;
  * <td>{@link UartChannelOption#DATA_BITS}</td><td>{@link #setDatabits(Databits)}</td>
  * </tr><tr>
  * <td>{@link UartChannelOption#PARITY}</td><td>{@link #setParitybit(Parity)}</td>
- * </tr><tr>
- * <td>{@link UartChannelOption#WAIT_TIME}</td><td>{@link #setWaitTimeMillis(int)}</td>
  * </tr>
  * </table>
  */
@@ -61,7 +59,7 @@ public interface UartChannelConfig extends ChannelConfig {
         /**
          * 1.5 stop bits will be sent at the end of every character
          */
-        STOPBITS_1_5;
+        STOPBITS_1_5
     }
 
     enum Databits {
@@ -80,9 +78,9 @@ public interface UartChannelConfig extends ChannelConfig {
         /**
          * 8 data bits will be used for each character (ie. binary data)
          */
-        DATABITS_8;
+        DATABITS_8
 
-        
+
     }
 
     enum Parity {
@@ -108,11 +106,15 @@ public interface UartChannelConfig extends ChannelConfig {
         /**
          * A space parity bit (ie. always 0) will be sent with each data character
          */
-        SPACE;
+        SPACE
     }
     
     enum FlowControl{
-    	XXX
+        FLOWCONTROL_NONE,
+        FLOWCONTROL_RTSCTS_IN,
+        FLOWCONTROL_RTSCTS_OUT,
+        FLOWCONTROL_XONXOFF_IN,
+        FLOWCONTROL_XONXOFF_OUT
     }
     /**
 	 * @return The configured baud rate, defaulting to 115200 if unset
