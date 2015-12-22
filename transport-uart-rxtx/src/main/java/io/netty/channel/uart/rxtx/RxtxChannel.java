@@ -15,12 +15,6 @@
  */
 package io.netty.channel.uart.rxtx;
 
-import static io.netty.channel.uart.UartChannelOption.DTR;
-import static io.netty.channel.uart.UartChannelOption.RTS;
-import static io.netty.channel.uart.UartChannelOption.WAIT_TIME;
-import static io.netty.channel.uart.UartDeviceAddress.LOCAL_ADDRESS;
-import static io.netty.channel.uart.rxtx.ChannelConfigConverter.toRxtx;
-import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 import io.netty.channel.ChannelPromise;
@@ -37,6 +31,10 @@ import io.netty.util.internal.OneTimeTask;
 
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
+
+import static io.netty.channel.uart.UartChannelOption.WAIT_TIME;
+import static io.netty.channel.uart.UartDeviceAddress.LOCAL_ADDRESS;
+import static io.netty.channel.uart.rxtx.ChannelConfigConverter.toRxtx;
 
 /**
  * A channel to a serial device using the RXTX library.
@@ -76,11 +74,9 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
     protected void doConnect(SocketAddress remoteAddress, SocketAddress localAddress) throws Exception {
     	UartDeviceAddress remote = (UartDeviceAddress) remoteAddress;
         final CommPortIdentifier cpi = CommPortIdentifier.getPortIdentifier(remote.getPortName());
-        final CommPort commPort = cpi.open(getClass().getName(), 1000);
+        serialPort = (SerialPort) cpi.open(getClass().getName(), 1000);
        //commPort.enableReceiveTimeout(config().getOption(READ_TIMEOUT));
         deviceAddress = remote;
-
-        serialPort = (SerialPort) commPort;
     }
 
     protected void doInit() throws Exception {
@@ -96,8 +92,8 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
             toRxtx(partiy)
         );
 		serialPort.setFlowControlMode(toRxtx(flowControl));
-        serialPort.setDTR(config().getOption(DTR));
-        serialPort.setRTS(config().getOption(RTS));
+        serialPort.setDTR(config().isDtr());
+        serialPort.setRTS(config().isRts());
 
         activate(serialPort.getInputStream(), serialPort.getOutputStream());
     }
@@ -146,6 +142,9 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
         }
     }
 
+    /**
+     * dshdfh
+     */
     private final class RxtxUnsafe extends AbstractUnsafe {
         @Override
         public void connect(
@@ -161,32 +160,41 @@ public class RxtxChannel extends OioByteStreamChannel implements UartChannel{
 
                 int waitTime = config().getOption(WAIT_TIME);
                 if (waitTime > 0) {
-                    eventLoop().schedule(new OneTimeTask() {
-                        @Override
-                        public void run() {
-                            try {
-                                doInit();
-                                safeSetSuccess(promise);
-                                if (!wasActive && isActive()) {
-                                    pipeline().fireChannelActive();
-                                }
-                            } catch (Throwable t) {
-                                safeSetFailure(promise, t);
-                                closeIfClosed();
-                            }
-                        }
-                   }, waitTime, TimeUnit.MILLISECONDS);
+                    activateDelayed(promise, wasActive, waitTime);
                 } else {
-                    doInit();
-                    safeSetSuccess(promise);
-                    if (!wasActive && isActive()) {
-                        pipeline().fireChannelActive();
-                    }
+                    activateNow(promise, wasActive);
                 }
             } catch (Throwable t) {
-                safeSetFailure(promise, t);
-                closeIfClosed();
+                emergencyClose(promise, t);
             }
         }
+
+        private void activateDelayed(final ChannelPromise promise, final boolean wasActive, int waitTime) {
+            eventLoop().schedule(new OneTimeTask() {
+                @Override
+                public void run() {
+                    try {
+                        activateNow(promise, wasActive);
+                    } catch (Throwable t) {
+                        emergencyClose(promise, t);
+                    }
+                }
+            }, waitTime, TimeUnit.MILLISECONDS);
+        }
+
+        private void activateNow(ChannelPromise promise, boolean wasActive) throws Exception {
+            doInit();
+            safeSetSuccess(promise);
+            if (!wasActive && isActive()) {
+                pipeline().fireChannelActive();
+            }
+        }
+
+        private void emergencyClose(ChannelPromise promise, Throwable t) {
+            safeSetFailure(promise, t);
+            closeIfClosed();
+        }
+
+
     }
 }

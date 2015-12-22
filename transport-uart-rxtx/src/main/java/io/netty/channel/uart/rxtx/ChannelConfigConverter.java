@@ -60,6 +60,21 @@ class ChannelConfigConverter {
 	}
 	
 	public static int toRxtx(FlowControl flowControl) {
-		throw new UnsupportedOperationException();
+		switch (flowControl) {
+			case FLOWCONTROL_NONE:
+				return SerialPort.FLOWCONTROL_NONE;
+			case FLOWCONTROL_RTSCTS_IN:
+				return SerialPort.FLOWCONTROL_RTSCTS_IN;
+			case FLOWCONTROL_RTSCTS_OUT:
+				return SerialPort.FLOWCONTROL_RTSCTS_OUT;
+			case FLOWCONTROL_XONXOFF_IN:
+				return SerialPort.FLOWCONTROL_XONXOFF_IN;
+			case FLOWCONTROL_XONXOFF_OUT:
+				return SerialPort.FLOWCONTROL_XONXOFF_OUT;
+			default:
+				throw new IllegalArgumentException("Unsupported flowControl: "
+						+ flowControl);
+		}
+
 	}
 }
