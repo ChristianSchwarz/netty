@@ -23,7 +23,7 @@ import io.netty.channel.uart.UartChannelConfig.Stopbits;
 import static io.netty.channel.ChannelOption.*;
 
 /**
- * Option for configuring a serial port connection
+ * Option to configure a serial port connection
  */
 public final class UartChannelOption {
 

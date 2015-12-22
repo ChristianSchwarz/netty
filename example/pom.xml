@@ -110,7 +110,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>netty-transport-rxtx</artifactId>
+      <artifactId>netty-uart-transport-rxtx</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

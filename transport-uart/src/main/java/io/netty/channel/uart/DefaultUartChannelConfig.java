@@ -32,7 +32,7 @@ import io.netty.channel.RecvByteBufAllocator;
 import java.util.Map;
 
 /**
- * Default configuration class for RXTX device connections.
+ * Default configuration UART device connections.
  */
 public final class DefaultUartChannelConfig extends DefaultChannelConfig implements UartChannelConfig {
 

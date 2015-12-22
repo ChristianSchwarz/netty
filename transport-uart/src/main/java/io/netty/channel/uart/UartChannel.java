@@ -18,7 +18,7 @@ package io.netty.channel.uart;
 import io.netty.channel.Channel;
 
 /**
- * A channel to a serial device.
+ * A channel to a UART device.
  */
 public interface UartChannel extends Channel {
 

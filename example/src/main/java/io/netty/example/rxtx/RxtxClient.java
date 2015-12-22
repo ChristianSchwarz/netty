@@ -20,11 +20,10 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
-import io.netty.channel.rxtx.RxtxChannel;
-import io.netty.channel.rxtx.RxtxDeviceAddress;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.uart.UartDeviceAddress;
 
 /**
  * Sends one message to a serial device
@@ -51,7 +50,7 @@ public final class RxtxClient {
                  }
              });
 
-            ChannelFuture f = b.connect(new RxtxDeviceAddress(PORT)).sync();
+            ChannelFuture f = b.connect(new UartDeviceAddress(PORT)).sync();
 
             f.channel().closeFuture().sync();
         } finally {
