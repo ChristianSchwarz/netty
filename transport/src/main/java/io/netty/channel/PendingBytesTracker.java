@@ -15,73 +15,90 @@
  */
 package io.netty.channel;
 
-abstract class PendingBytesTracker implements MessageSizeEstimator.Handle {
-    abstract void incrementPendingOutboundBytes(long bytes);
-    abstract void decrementPendingOutboundBytes(long bytes);
+import io.netty.util.internal.ObjectUtil;
 
-    private PendingBytesTracker() {
-        // Should only be created via the static method.
+abstract class PendingBytesTracker implements MessageSizeEstimator.Handle {
+    private final MessageSizeEstimator.Handle estimatorHandle;
+
+    private PendingBytesTracker(MessageSizeEstimator.Handle estimatorHandle) {
+        this.estimatorHandle = ObjectUtil.checkNotNull(estimatorHandle, "estimatorHandle");
     }
+
+    @Override
+    public int size(Object msg) {
+        return estimatorHandle.size(msg);
+    }
+
+    public abstract void incrementPendingOutboundBytes(long bytes);
+    public abstract void decrementPendingOutboundBytes(long bytes);
 
     static PendingBytesTracker newTracker(Channel channel) {
         if (channel.pipeline() instanceof DefaultChannelPipeline) {
-            final DefaultChannelPipeline pipeline = (DefaultChannelPipeline) channel.pipeline();
-            return new PendingBytesTracker() {
-                @Override
-                public void incrementPendingOutboundBytes(long bytes) {
-                    pipeline.incrementPendingOutboundBytes(bytes);
-                }
-
-                @Override
-                public void decrementPendingOutboundBytes(long bytes) {
-                    pipeline.decrementPendingOutboundBytes(bytes);
-                }
-
-                @Override
-                public int size(Object msg) {
-                    return pipeline.estimatorHandle().size(msg);
-                }
-            };
+            return new DefaultChannelPipelinePendingBytesTracker((DefaultChannelPipeline) channel.pipeline());
         } else {
-            final MessageSizeEstimator.Handle estimator = channel.config().getMessageSizeEstimator().newHandle();
-            final ChannelOutboundBuffer buffer = channel.unsafe().outboundBuffer();
+            ChannelOutboundBuffer buffer = channel.unsafe().outboundBuffer();
+            MessageSizeEstimator.Handle handle = channel.config().getMessageSizeEstimator().newHandle();
             // We need to guard against null as channel.unsafe().outboundBuffer() may returned null
             // if the channel was already closed when constructing the PendingBytesTracker.
             // See https://github.com/netty/netty/issues/3967
-            if (buffer == null) {
-                return new PendingBytesTracker() {
-                    @Override
-                    public void incrementPendingOutboundBytes(long bytes) {
-                        // noop
-                    }
+            return buffer == null ?
+                    new NoopPendingBytesTracker(handle) : new ChannelOutboundBufferPendingBytesTracker(buffer, handle);
+        }
+    }
 
-                    @Override
-                    public void decrementPendingOutboundBytes(long bytes) {
-                        // noop
-                    }
+    private static final class DefaultChannelPipelinePendingBytesTracker extends PendingBytesTracker {
+        private final DefaultChannelPipeline pipeline;
 
-                    @Override
-                    public int size(Object msg) {
-                        return estimator.size(msg);
-                    }
-                };
-            }
-            return new PendingBytesTracker() {
-                @Override
-                public void incrementPendingOutboundBytes(long bytes) {
-                    buffer.incrementPendingOutboundBytes(bytes);
-                }
+        DefaultChannelPipelinePendingBytesTracker(DefaultChannelPipeline pipeline) {
+            super(pipeline.estimatorHandle());
+            this.pipeline = pipeline;
+        }
 
-                @Override
-                public void decrementPendingOutboundBytes(long bytes) {
-                    buffer.decrementPendingOutboundBytes(bytes);
-                }
+        @Override
+        public void incrementPendingOutboundBytes(long bytes) {
+            pipeline.incrementPendingOutboundBytes(bytes);
+        }
 
-                @Override
-                public int size(Object msg) {
-                    return estimator.size(msg);
-                }
-            };
+        @Override
+        public void decrementPendingOutboundBytes(long bytes) {
+            pipeline.decrementPendingOutboundBytes(bytes);
+        }
+    }
+
+    private static final class ChannelOutboundBufferPendingBytesTracker extends PendingBytesTracker {
+        private final ChannelOutboundBuffer buffer;
+
+        ChannelOutboundBufferPendingBytesTracker(
+                ChannelOutboundBuffer buffer, MessageSizeEstimator.Handle estimatorHandle) {
+            super(estimatorHandle);
+            this.buffer = buffer;
+        }
+
+        @Override
+        public void incrementPendingOutboundBytes(long bytes) {
+            buffer.incrementPendingOutboundBytes(bytes);
+        }
+
+        @Override
+        public void decrementPendingOutboundBytes(long bytes) {
+            buffer.decrementPendingOutboundBytes(bytes);
+        }
+    }
+
+    private static final class NoopPendingBytesTracker extends PendingBytesTracker {
+
+        NoopPendingBytesTracker(MessageSizeEstimator.Handle estimatorHandle) {
+            super(estimatorHandle);
+        }
+
+        @Override
+        public void incrementPendingOutboundBytes(long bytes) {
+            // Noop
+        }
+
+        @Override
+        public void decrementPendingOutboundBytes(long bytes) {
+            // Noop
         }
     }
 }
