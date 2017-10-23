@@ -1,8 +1,8 @@
 package io.netty.channel.uart;
 
-import java.util.ServiceLoader;
-
 import io.netty.channel.ChannelFactory;
+
+import java.util.ServiceLoader;
 
 public class UartChannelFactory implements ChannelFactory<UartChannel> {
 

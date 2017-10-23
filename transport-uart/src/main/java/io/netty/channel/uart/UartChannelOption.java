@@ -20,7 +20,8 @@ import io.netty.channel.uart.UartChannelConfig.Databits;
 import io.netty.channel.uart.UartChannelConfig.FlowControl;
 import io.netty.channel.uart.UartChannelConfig.Parity;
 import io.netty.channel.uart.UartChannelConfig.Stopbits;
-import static io.netty.channel.ChannelOption.*;
+
+import static io.netty.channel.ChannelOption.valueOf;
 
 /**
  * Option to configure a serial port connection
