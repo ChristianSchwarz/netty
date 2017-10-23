@@ -36,15 +36,6 @@ public abstract class AbstractCoalescingBufferQueue {
     /**
      * Create a new instance.
      *
-     * @param initSize theinitial size of the underlying queue.
-     */
-    protected AbstractCoalescingBufferQueue(int initSize) {
-        this(null, initSize);
-    }
-
-    /**
-     * Create a new instance.
-     *
      * @param channel the {@link Channel} which will have the {@link Channel#isWritable()} reflect the amount of queued
      *                buffers or {@code null} if there is no writability state updated.
      * @param initSize theinitial size of the underlying queue.
@@ -308,10 +299,10 @@ public abstract class AbstractCoalescingBufferQueue {
         if (nextReadableBytes < readableBytes) {
             throw new IllegalStateException("buffer queue length overflow: " + readableBytes + " + " + increment);
         }
+        readableBytes = nextReadableBytes;
         if (tracker != null) {
             tracker.incrementPendingOutboundBytes(increment);
         }
-        readableBytes = nextReadableBytes;
     }
 
     private void decrementReadableBytes(int decrement) {

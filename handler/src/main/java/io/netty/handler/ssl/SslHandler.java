@@ -375,7 +375,7 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
     private volatile long handshakeTimeoutMillis = 10000;
     private volatile long closeNotifyFlushTimeoutMillis = 3000;
     private volatile long closeNotifyReadTimeoutMillis;
-    private volatile int wrapDataSize = MAX_PLAINTEXT_LENGTH;
+    volatile int wrapDataSize = MAX_PLAINTEXT_LENGTH;
 
     /**
      * Creates a new instance.
@@ -1837,23 +1837,23 @@ public class SslHandler extends ByteToMessageDecoder implements ChannelOutboundH
         protected ByteBuf removeEmptyValue() {
             return null;
         }
+    }
 
-        private boolean attemptCopyToCumulation(ByteBuf cumulation, ByteBuf next, int wrapDataSize) {
-            final int inReadableBytes = next.readableBytes();
-            final int cumulationCapacity = cumulation.capacity();
-            if (wrapDataSize - cumulation.readableBytes() >= inReadableBytes &&
-                    // Avoid using the same buffer if next's data would make cumulation exceed the wrapDataSize.
-                    // Only copy if there is enough space available and the capacity is large enough, and attempt to
-                    // resize if the capacity is small.
-                    (cumulation.isWritable(inReadableBytes) && cumulationCapacity >= wrapDataSize ||
-                            cumulationCapacity < wrapDataSize &&
-                                    ensureWritableSuccess(cumulation.ensureWritable(inReadableBytes, false)))) {
-                cumulation.writeBytes(next);
-                next.release();
-                return true;
-            }
-            return false;
+    private static boolean attemptCopyToCumulation(ByteBuf cumulation, ByteBuf next, int wrapDataSize) {
+        final int inReadableBytes = next.readableBytes();
+        final int cumulationCapacity = cumulation.capacity();
+        if (wrapDataSize - cumulation.readableBytes() >= inReadableBytes &&
+                // Avoid using the same buffer if next's data would make cumulation exceed the wrapDataSize.
+                // Only copy if there is enough space available and the capacity is large enough, and attempt to
+                // resize if the capacity is small.
+                (cumulation.isWritable(inReadableBytes) && cumulationCapacity >= wrapDataSize ||
+                        cumulationCapacity < wrapDataSize &&
+                                ensureWritableSuccess(cumulation.ensureWritable(inReadableBytes, false)))) {
+            cumulation.writeBytes(next);
+            next.release();
+            return true;
         }
+        return false;
     }
 
     private final class LazyChannelPromise extends DefaultPromise<Channel> {
